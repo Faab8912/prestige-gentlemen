@@ -1,0 +1,227 @@
+MLD - PRESTIGE GENTLEMEN - E-COMMERCE COSTUMES DE MARIAGE
+
+BASE DE DONNÉES: prestige_gentlemen (MySQL 8.0)
+ENCODAGE: utf8mb4_unicode_ci
+ENGINE: InnoDB
+
+
+TABLES MYSQL
+
+
+TABLE: users
+
+id                  INT             AUTO_INCREMENT PRIMARY KEY
+first_name          VARCHAR(100)    NOT NULL
+last_name           VARCHAR(100)    NOT NULL
+email               VARCHAR(150)    NOT NULL UNIQUE
+password            VARCHAR(255)    NOT NULL
+phone               VARCHAR(20)     NULL
+role                ENUM('client', 'admin')  DEFAULT 'client'
+created_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+updated_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+INDEX: idx_email (email)
+INDEX: idx_role (role)
+
+
+TABLE: categories
+
+id                  INT             AUTO_INCREMENT PRIMARY KEY
+name                VARCHAR(100)    NOT NULL UNIQUE
+slug                VARCHAR(100)    NOT NULL UNIQUE
+description         TEXT            NULL
+image_url           VARCHAR(255)    NULL
+display_order       INT             DEFAULT 0
+created_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+
+INDEX: idx_slug (slug)
+
+
+TABLE: products
+
+id                  INT             AUTO_INCREMENT PRIMARY KEY
+category_id         INT             NOT NULL
+name                VARCHAR(200)    NOT NULL
+slug                VARCHAR(200)    NOT NULL UNIQUE
+description         TEXT            NULL
+base_price          DECIMAL(10,2)   NOT NULL
+image_url           VARCHAR(255)    NULL
+is_featured         BOOLEAN         DEFAULT FALSE
+is_active           BOOLEAN         DEFAULT TRUE
+created_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+updated_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE CASCADE
+
+INDEX: idx_category (category_id)
+INDEX: idx_slug (slug)
+INDEX: idx_featured (is_featured)
+INDEX: idx_active (is_active)
+
+
+TABLE: variants
+
+id                  INT             AUTO_INCREMENT PRIMARY KEY
+product_id          INT             NOT NULL
+size                VARCHAR(10)     NOT NULL
+color               VARCHAR(50)     NOT NULL
+stock_quantity      INT             NOT NULL DEFAULT 0
+price_modifier      DECIMAL(10,2)   DEFAULT 0.00
+sku                 VARCHAR(100)    UNIQUE
+created_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+updated_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+
+UNIQUE KEY: unique_variant (product_id, size, color)
+INDEX: idx_product (product_id)
+INDEX: idx_stock (stock_quantity)
+CHECK: stock_quantity >= 0
+
+
+TABLE: orders
+
+id                      INT             AUTO_INCREMENT PRIMARY KEY
+user_id                 INT             NOT NULL
+order_number            VARCHAR(50)     NOT NULL UNIQUE
+total_amount            DECIMAL(10,2)   NOT NULL
+status                  ENUM('pending', 'confirmed', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending'
+shipping_address        TEXT            NOT NULL
+shipping_city           VARCHAR(100)    NOT NULL
+shipping_postal_code    VARCHAR(20)     NOT NULL
+shipping_country        VARCHAR(100)    DEFAULT 'France'
+payment_method          VARCHAR(50)     NULL
+payment_status          ENUM('pending', 'completed', 'failed') DEFAULT 'pending'
+notes                   TEXT            NULL
+created_at              TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+updated_at              TIMESTAMP       DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+
+FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+
+INDEX: idx_user (user_id)
+INDEX: idx_order_number (order_number)
+INDEX: idx_status (status)
+INDEX: idx_created (created_at)
+
+
+TABLE: order_items
+
+id                  INT             AUTO_INCREMENT PRIMARY KEY
+order_id            INT             NOT NULL
+variant_id          INT             NOT NULL
+product_name        VARCHAR(200)    NOT NULL
+size                VARCHAR(10)     NOT NULL
+color               VARCHAR(50)     NOT NULL
+quantity            INT             NOT NULL
+unit_price          DECIMAL(10,2)   NOT NULL
+subtotal            DECIMAL(10,2)   NOT NULL
+created_at          TIMESTAMP       DEFAULT CURRENT_TIMESTAMP
+
+FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE
+FOREIGN KEY (variant_id) REFERENCES variants(id) ON DELETE RESTRICT
+
+INDEX: idx_order (order_id)
+INDEX: idx_variant (variant_id)
+CHECK: quantity > 0
+CHECK: unit_price >= 0
+CHECK: subtotal >= 0
+
+
+COLLECTIONS MONGODB
+
+BASE DE DONNÉES: prestige_gentlemen (MongoDB)
+
+
+COLLECTION: reviews
+
+{
+  _id: ObjectId,
+  productId: Number (référence products.id),
+  userId: Number (référence users.id),
+  userName: String (required, maxLength: 100),
+  rating: Number (required, min: 1, max: 5),
+  comment: String (required, maxLength: 1000),
+  verified: Boolean (default: false),
+  createdAt: Date (default: Date.now)
+}
+
+INDEX: { productId: 1, createdAt: -1 }
+INDEX: { productId: 1 }
+
+
+COLLECTION: logs
+
+{
+  _id: ObjectId,
+  userId: Number (required, référence users.id),
+  userEmail: String (required),
+  action: String (required, enum: ['login', 'logout', 'register', 'order_created', 'order_updated', 'product_viewed', 'cart_updated', 'profile_updated']),
+  details: Mixed (objet JSON flexible),
+  ipAddress: String,
+  userAgent: String,
+  createdAt: Date (default: Date.now)
+}
+
+INDEX: { userId: 1, createdAt: -1 }
+INDEX: { action: 1, createdAt: -1 }
+INDEX: { userId: 1 }
+
+
+COLLECTION: cartsessions
+
+{
+  _id: ObjectId,
+  userId: Number (required, référence users.id),
+  items: [
+    {
+      productId: Number (required),
+      variantId: Number (required),
+      productName: String (required),
+      size: String (required),
+      color: String (required),
+      quantity: Number (required, min: 1),
+      unitPrice: Number (required)
+    }
+  ],
+  totalAmount: Number (required, default: 0),
+  status: String (enum: ['active', 'abandoned', 'converted'], default: 'active'),
+  lastModified: Date (default: Date.now),
+  createdAt: Date (default: Date.now)
+}
+
+INDEX: { userId: 1, status: 1 }
+INDEX: { lastModified: -1 }
+
+
+RÈGLES DE GESTION
+
+1. Un utilisateur peut passer plusieurs commandes
+2. Une commande contient au moins un article
+3. Un produit appartient à une seule catégorie
+4. Un produit peut avoir plusieurs variants (tailles, couleurs)
+5. Le stock est géré au niveau du variant
+6. Une commande capture les informations du produit au moment de l'achat
+7. Les avis sont stockés dans MongoDB pour flexibilité
+8. Les logs système sont dans MongoDB pour performance
+9. Les sessions de panier sont temporaires dans MongoDB
+10. La suppression d'un produit désactive (is_active=0) au lieu de supprimer
+11. Les prix sont en euros avec 2 décimales
+12. Les mots de passe sont hashés avec bcrypt (10 rounds)
+13. Les tokens JWT expirent après 24h
+14. Le numéro de commande est généré automatiquement (PG + timestamp)
+15. Les variants ont un SKU unique pour tracking
+
+
+VOLUMÉTRIE ESTIMÉE
+
+MYSQL:
+- users: ~1000 utilisateurs/an
+- products: ~100 produits
+- variants: ~500 variants (5 par produit en moyenne)
+- orders: ~500 commandes/an
+- order_items: ~1000 articles/an
+
+MONGODB:
+- reviews: ~1000 avis/an
+- logs: ~10000 entrées/an
+- cartsessions: ~500 sessions actives
