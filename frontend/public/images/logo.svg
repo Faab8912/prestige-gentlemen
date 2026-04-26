@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="200" height="60">
+  <!--
+    Prestige Gentlemen — icon only, white on navy
+    Shield + crown + P, all contours white, P solid white, shield interior navy.
+  -->
+
+  <!-- Center the icon horizontally; canvas is 200x60, icon ~46 wide -->
+  <g transform="translate(77, 2)">
+
+    <!-- ===== CROWN (white outline) ===== -->
+    <g fill="none" stroke="#FFFFFF" stroke-width="0.9" stroke-linejoin="round" stroke-linecap="round">
+      <!-- Crown spikes -->
+      <path d="M 5,11 L 5,7 L 10,3 L 13,8 L 17,1 L 21,8 L 24,3 L 29,7 L 29,11 Z"
+            fill="#0E1530"/>
+      <!-- Crown band -->
+      <rect x="5" y="11" width="24" height="3.5" fill="#0E1530"/>
+      <!-- Tiny dots on tips -->
+      <circle cx="10" cy="3" r="0.8" fill="#FFFFFF" stroke="none"/>
+      <circle cx="17" cy="1" r="0.8" fill="#FFFFFF" stroke="none"/>
+      <circle cx="24" cy="3" r="0.8" fill="#FFFFFF" stroke="none"/>
+    </g>
+
+    <!-- ===== SHIELD ===== -->
+    <g transform="translate(0, 16)">
+      <!-- Filled navy shield -->
+      <path d="M 1,1 L 33,1 L 33,20 C 33,28 26,34 17,38 C 8,34 1,28 1,20 Z"
+            fill="#0E1530" stroke="#FFFFFF" stroke-width="1.1" stroke-linejoin="round"/>
+      <!-- Inner thin white line -->
+      <path d="M 3.2,3.2 L 30.8,3.2 L 30.8,19.5 C 30.8,26.5 25,32 17,35.5 C 9,32 3.2,26.5 3.2,19.5 Z"
+            fill="none" stroke="#FFFFFF" stroke-width="0.5" stroke-linejoin="round"/>
+      <!-- Letter P (solid white) -->
+      <text x="17" y="25" text-anchor="middle"
+            font-family="Georgia, 'Times New Roman', serif"
+            font-size="22" font-weight="bold"
+            fill="#FFFFFF">P</text>
+    </g>
+
+  </g>
+</svg>

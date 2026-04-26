@@ -28,10 +28,23 @@ function Header() {
         <Navbar.Brand
           as={Link}
           to="/"
-          style={{ color: "#FFFFFF", fontWeight: "bold", fontSize: "24px" }}
           translate="no"
+          style={{ display: "flex", alignItems: "center" }}
         >
-          Prestige Gentlemen
+          <img
+            src="/images/logo.svg"
+            alt="Prestige Gentlemen Logo"
+            style={{ height: "50px", marginRight: "-60px" }}
+          />
+          <span
+            style={{
+              color: "#FFFFFF",
+              fontWeight: "bold",
+              fontSize: "24px",
+            }}
+          >
+            Prestige Gentlemen
+          </span>
         </Navbar.Brand>
         <Navbar.Toggle
           aria-controls="basic-navbar-nav"
