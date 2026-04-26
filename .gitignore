@@ -32,3 +32,6 @@ coverage/
 
 # Production
 /build
+
+# Claude Code worktrees (sessions de travail isolées)
+.claude/
