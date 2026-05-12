@@ -142,6 +142,42 @@ class ReviewController {
       });
     }
   }
+
+  /**
+   * Renvoie les stats d'avis pour TOUS les produits
+   * en une seule agrégation MongoDB (évite le N+1).
+   * Endpoint public : utilisé par la page liste des produits.
+   */
+  static async getStatsByProduct(req, res) {
+    try {
+      const stats = await Review.aggregate([
+        {
+          $group: {
+            _id: "$productId",
+            averageRating: { $avg: "$rating" },
+            reviewCount: { $sum: 1 },
+          },
+        },
+      ]);
+
+      // Transforme en objet { productId: { averageRating, reviewCount }, ... }
+      const statsByProduct = stats.reduce((acc, s) => {
+        acc[s._id] = {
+          averageRating: Math.round(s.averageRating * 10) / 10,
+          reviewCount: s.reviewCount,
+        };
+        return acc;
+      }, {});
+
+      res.json({ success: true, stats: statsByProduct });
+    } catch (error) {
+      console.error("Erreur getStatsByProduct:", error);
+      res.status(500).json({
+        success: false,
+        message: "Erreur lors de la récupération des statistiques",
+      });
+    }
+  }
 }
 
 module.exports = ReviewController;

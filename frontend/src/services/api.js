@@ -44,6 +44,7 @@ export const orderAPI = {
 export const reviewAPI = {
   create: (reviewData) => api.post("/reviews", reviewData),
   getProductReviews: (productId) => api.get(`/reviews/product/${productId}`),
+  getStats: () => api.get("/reviews/stats"),
   delete: (id) => api.delete(`/reviews/${id}`),
 };
 

@@ -139,7 +139,7 @@ function ProductDetailPage() {
             {product.name}
           </h1>
 
-          {product.is_featured && (
+          {Boolean(product.is_featured) && (
             <Badge
               className="mb-3"
               style={{

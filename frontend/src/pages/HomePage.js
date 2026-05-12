@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { productAPI } from "../services/api";
+import { productAPI, reviewAPI } from "../services/api";
 
 function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -13,13 +13,31 @@ function HomePage() {
 
   const loadFeaturedProducts = async () => {
     try {
-      const response = await productAPI.getAll({ featured: "true" });
-      const sortedProducts = response.data.products.sort((a, b) => {
+      // Appels en parallèle : produits MySQL + stats avis MongoDB
+      const [productsRes, statsRes] = await Promise.all([
+        productAPI.getAll({ featured: "true" }),
+        reviewAPI.getStats().catch((err) => {
+          console.warn("Stats avis indisponibles:", err);
+          return { data: { stats: {} } };
+        }),
+      ]);
+
+      const stats = statsRes.data?.stats || {};
+
+      // Fusionner les stats dans chaque produit
+      const productsWithStats = productsRes.data.products.map((p) => ({
+        ...p,
+        reviewCount: stats[p.id]?.reviewCount || 0,
+        averageRating: stats[p.id]?.averageRating || 0,
+      }));
+
+      const sortedProducts = productsWithStats.sort((a, b) => {
         // Mettre le Costume Marine (id=2) en premier
         if (a.id === 2) return -1;
         if (b.id === 2) return 1;
         return a.id - b.id;
       });
+
       setFeaturedProducts(sortedProducts);
       setLoading(false);
     } catch (error) {
@@ -30,10 +48,22 @@ function HomePage() {
 
   return (
     <div>
-      <div className="text-white py-5" style={{ backgroundColor: "#000000" }}>
+      <div
+        className="text-white"
+        style={{
+          backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.85) 30%, rgba(0, 0, 0, 0.5) 55%, rgba(0, 0, 0, 0.1) 80%, rgba(0, 0, 0, 0) 100%), url('/images/hero-gentleman.jpg')`,
+          backgroundSize: "cover",
+          backgroundPosition: "right center",
+          backgroundRepeat: "no-repeat",
+          minHeight: "600px",
+        }}
+      >
         <Container>
-          <Row className="align-items-center">
-            <Col md={8}>
+          <Row
+            className="align-items-center"
+            style={{ minHeight: "600px" }}
+          >
+            <Col md={7} lg={6} className="py-5">
               <h1 className="display-3 fw-bold" style={{ color: "#0074c7" }}>
                 Prestige Gentlemen
               </h1>
@@ -46,7 +76,11 @@ function HomePage() {
                 <Button
                   variant="primary"
                   size="lg"
-                  style={{ backgroundColor: "#0074c7", border: "none" }}
+                  style={{
+                    backgroundColor: "#0074c7",
+                    border: "none",
+                    width: "fit-content",
+                  }}
                 >
                   Découvrir la collection
                 </Button>
@@ -87,6 +121,19 @@ function HomePage() {
                     <Card.Title>{product.name}</Card.Title>
                     <Card.Text className="text-muted">
                       {product.description.substring(0, 40)}...
+                    </Card.Text>
+                    <Card.Text className="mb-2" style={{ fontSize: "0.9rem" }}>
+                      {product.reviewCount > 0 ? (
+                        <>
+                          <span style={{ color: "#FFA41C" }}>★</span>{" "}
+                          <strong>{product.averageRating}</strong>{" "}
+                          <span style={{ color: "#666" }}>
+                            ({product.reviewCount} avis)
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ color: "#999" }}>Aucun avis</span>
+                      )}
                     </Card.Text>
                     <div className="d-flex justify-content-between align-items-center">
                       <h5

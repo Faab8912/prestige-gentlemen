@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Container, Row, Col, Card, Button, Form } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { productAPI } from "../services/api";
+import { productAPI, reviewAPI } from "../services/api";
 
 function ProductsPage() {
   const [products, setProducts] = useState([]);
@@ -26,7 +26,25 @@ function ProductsPage() {
     try {
       setLoading(true);
       const params = selectedCategory ? { categoryId: selectedCategory } : {};
-      const response = await productAPI.getAll(params);
+
+      // Appels en parallèle : produits MySQL + stats avis MongoDB
+      // Le call des stats est tolérant aux erreurs (fallback à {} si la route échoue)
+      const [productsRes, statsRes] = await Promise.all([
+        productAPI.getAll(params),
+        reviewAPI.getStats().catch((err) => {
+          console.warn("Stats avis indisponibles:", err);
+          return { data: { stats: {} } };
+        }),
+      ]);
+
+      const stats = statsRes.data?.stats || {};
+
+      // Fusionner les stats dans chaque produit
+      const productsWithStats = productsRes.data.products.map((p) => ({
+        ...p,
+        reviewCount: stats[p.id]?.reviewCount || 0,
+        averageRating: stats[p.id]?.averageRating || 0,
+      }));
 
       // Ordre personnalisé exact selon tes fichiers images
       const customOrder = {
@@ -44,7 +62,7 @@ function ProductsPage() {
         10: 12, // Richelieu Cuir Noir
       };
 
-      const sortedProducts = response.data.products.sort((a, b) => {
+      const sortedProducts = productsWithStats.sort((a, b) => {
         return (customOrder[a.id] || 999) - (customOrder[b.id] || 999);
       });
 
@@ -113,6 +131,19 @@ function ProductsPage() {
                     <Card.Text className="text-muted">
                       {product.description?.substring(0, 20)}...
                     </Card.Text>
+                    <Card.Text className="mb-2" style={{ fontSize: "0.9rem" }}>
+                      {product.reviewCount > 0 ? (
+                        <>
+                          <span style={{ color: "#FFA41C" }}>★</span>{" "}
+                          <strong>{product.averageRating}</strong>{" "}
+                          <span style={{ color: "#666" }}>
+                            ({product.reviewCount} avis)
+                          </span>
+                        </>
+                      ) : (
+                        <span style={{ color: "#999" }}>Aucun avis</span>
+                      )}
+                    </Card.Text>
                     <div className="d-flex justify-content-between align-items-center">
                       <h5
                         className="mb-0"
@@ -130,7 +161,7 @@ function ProductsPage() {
                         </Button>
                       </Link>
                     </div>
-                    {product.is_featured && (
+                    {Boolean(product.is_featured) && (
                       <div className="mt-2">
                         <span
                           className="badge"
