@@ -1,6 +1,5 @@
 -- Prestige Gentlemen - Schéma de base de données MySQL
 -- E-commerce costumes de mariage haut de gamme
--- Date: Mars 2026
 
 -- Création de la base de données
 CREATE DATABASE IF NOT EXISTS prestige_gentlemen CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -192,15 +191,18 @@ INSERT INTO variants (product_id, size, color, stock_quantity, sku) VALUES
 (10, '45', 'Noir', 7, 'RICH-N-45'),
 (10, '46', 'Noir', 5, 'RICH-N-46');
 
--- Insertion d'un utilisateur admin (mot de passe: admin123)
+-- Insertion d'un utilisateur administrateur (credentials fournis sur demande au mentor ou au jury)
+-- Politique de mot de passe admin : 12+ caracteres avec majuscules, minuscules, chiffres et caracteres speciaux (conforme CNIL/ANSSI)
 INSERT INTO users (first_name, last_name, email, password, phone, role) VALUES
-('Admin', 'Prestige', 'admin@prestige-gentlemen.com', '$2b$10$rOiEyJ5vP8wW.GHxZ0oGEucVZxGFx/VQqD7EzVKrM8TkVJ5kJ5Yey', '0600000000', 'admin');
+('Admin', 'Prestige', 'admin@prestige-gentlemen.com', '$2b$10$JukC2KLkeIaNr46aFDFaQ.yRkzAR.tYKfm.Guu9qZ7CTkqA0Wa3wW', '0600000000', 'admin');
 
--- Insertion d'utilisateurs clients de test (mot de passe: client123)
+-- Insertion d'utilisateurs clients pour la demonstration (associes aux avis MongoDB de la collection reviews)
+-- Ces comptes ne sont pas destines a la connexion : ils peuplent la base avec des avis clients fictifs pour les pages Detail Produit.
+-- Pour un usage reel, les utilisateurs s'inscrivent via le formulaire /register du site.
 INSERT INTO users (first_name, last_name, email, password, phone, role) VALUES
-('Pierre', 'Dupont', 'pierre.dupont@email.fr', '$2b$10$rOiEyJ5vP8wW.GHxZ0oGEucVZxGFx/VQqD7EzVKrM8TkVJ5kJ5Yey', '0612345678', 'client'),
-('Jean', 'Martin', 'jean.martin@email.fr', '$2b$10$rOiEyJ5vP8wW.GHxZ0oGEucVZxGFx/VQqD7EzVKrM8TkVJ5kJ5Yey', '0698765432', 'client'),
-('Marc', 'Bernard', 'marc.bernard@email.fr', '$2b$10$rOiEyJ5vP8wW.GHxZ0oGEucVZxGFx/VQqD7EzVKrM8TkVJ5kJ5Yey', '0656789012', 'client');
+('Pierre', 'Dupont', 'pierre.dupont@email.fr', '$2b$10$bC1wQPlQ44Q1n.MftQd47urLjqfRfXIW.S2HBSAVqg2RO4.3NpcsS', '0612345678', 'client'),
+('Jean', 'Martin', 'jean.martin@email.fr', '$2b$10$bC1wQPlQ44Q1n.MftQd47urLjqfRfXIW.S2HBSAVqg2RO4.3NpcsS', '0698765432', 'client'),
+('Marc', 'Bernard', 'marc.bernard@email.fr', '$2b$10$bC1wQPlQ44Q1n.MftQd47urLjqfRfXIW.S2HBSAVqg2RO4.3NpcsS', '0656789012', 'client');
 
 -- Vérification des données
 SELECT 'Categories' as Table_Name, COUNT(*) as Count FROM categories

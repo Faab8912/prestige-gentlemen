@@ -111,18 +111,6 @@ function LoginPage() {
                   </p>
                 </div>
               </Form>
-
-              <hr className="my-4" />
-
-              <div className="text-center text-muted">
-                <small>
-                  <strong>Compte de test:</strong>
-                  <br />
-                  Email: admin@prestige-gentlemen.com
-                  <br />
-                  Mot de passe: admin123
-                </small>
-              </div>
             </Card.Body>
           </Card>
         </div>
