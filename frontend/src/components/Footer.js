@@ -22,7 +22,7 @@ function Footer() {
                 fontSize: "18px",
               }}
             >
-              Messieurs de prestige
+              Prestige Gentlemen
             </h6>
             <p className="mb-0">{"L'élégance pour votre jour parfait"}</p>
           </div>
